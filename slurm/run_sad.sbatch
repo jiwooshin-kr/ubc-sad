@@ -84,7 +84,7 @@ RUN_DIR="$BASE_DIR/$SLUG/$SLURM_JOB_ID"    # io.run_id defaults to $SLURM_JOB_ID
 # ==========================================================================
 # 2. generate
 # ==========================================================================
-echo "############ slug=$SLUG limit=$LIMIT job=$SLURM_JOB_ID"
+echo "############ slug=$SLUG job=$SLURM_JOB_ID"
 echo "############ safety: ${SAFETY[*]}"
 echo "############ generate  $(date)"
 
