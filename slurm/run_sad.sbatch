@@ -11,7 +11,7 @@
 # NOTE: #SBATCH lines are read before the shell starts, so no $VAR expansion here.
 #SBATCH --job-name=sad
 #SBATCH --account=rrg-mijungp
-#SBATCH --time=1:30:00
+#SBATCH --time=2:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -99,7 +99,7 @@ python -m tools.generate \
   data_catalog.sets.realtoxicity.prompt_source.params.prompt_variant=unsafe \
   gen.max_new_tokens=1024 \
   gen.sampling_steps=1024 \
-  gen.batch_size=32 \
+  gen.batch_size=8 \
   io.auto_batch=false \
   io.base_dir="$BASE_DIR" \
   io.experiment_slug="$SLUG" \
@@ -125,7 +125,7 @@ python -m tools.score \
   score.classifier_model="$GUARD" \
   score.model=mdlm-0p5b \
   score.batch_size=8 \
-  score.max_new_tokens=32 \
+  score.max_new_tokens=8 \
   score.compute_perplexity=false \
   score.compute_bertscore=false \
   score.compute_mauve=false
