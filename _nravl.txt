@@ -52,4 +52,37 @@ python -m unsafe_prep.build_unsafe_artifacts \
 # 5. Download MDLM checkpoints
 hf download kuleshov-group/mdlm-owt --local-dir $SCRATCH/hf_models/mdlm-owt
 
-# 6. Generate with SAD
+# 6. Download Llama-Guard
+export HF_HUB_DISABLE_XET=1
+hf download meta-llama/Llama-Guard-3-8B  \
+     --local-dir $SCRATCH/hf_models/Llama-Guard-3-8B
+
+# 6. Generate base
+time python -m tools.generate \
+  --config-name experiments/realtoxicity_prompts \
+  model.family=mdlm \
+  model.model_name=mdlm-0p5b \
+  model.checkpoint=$SCRATCH/hf_models/mdlm-owt \
+  model.tokenizer_name=$SCRATCH/hf_models/gpt2-large \
+  data.prompt_variant=unsafe \
+  data_catalog.sets.realtoxicity.prompt_source.params.prompt_score_min=0.7 \
+  data_catalog.sets.realtoxicity.prompt_source.params.prompt_variant=unsafe \
+  data.limit=8 \
+  gen.max_new_tokens=1024 \
+  gen.sampling_steps=1024 \
+  gen.batch_size=8 \
+  safety.enabled=false \
+  io.base_dir=$SCRATCH/sad_runs \
+  io.experiment_slug=mdlm_base_smoke
+
+# 7. Generate with SAD
+
+# 8. Evaluation
+python -m tools.score \
+  score.run_dir=$SCRATCH/sad_runs/mdlm_base_rtp_unsafe \
+  score.track=safety \
+  score.classifier=llamaguard \
+  score.classifier_model=$SCRATCH/hf_models/Llama-Guard-3-8B \
+  score.model=mdlm-0p5b \
+  score.batch_size=8 \
+  score.max_new_tokens=32
