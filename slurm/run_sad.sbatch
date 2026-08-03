@@ -108,11 +108,11 @@ python -m tools.generate \
   "${SAFETY[@]}"
 
 # ==========================================================================
-# 3. score  (ASR via Llama-Guard-3-8B)
-#    perplexity/BERTScore/MAUVE are off: not part of Table 1's ASR column.
-#    To enable perplexity, pass the local PATH as the model name --
-#    score.perplexity_model_name=$GPT2 -- because a bare "gpt2-large" is
-#    looked up on the hub and compute nodes are offline.
+# 3. score  (ASR via Llama-Guard-3-8B + generative perplexity)
+#    BERTScore/MAUVE are off: BERTScore is a benign-prompt metric and needs
+#    `evaluate` + deberta cached on the login node first.
+#    perplexity_model must be a local PATH, not the name "gpt2-large" --
+#    score.py:3033 reads score.perplexity_model and compute nodes are offline.
 # ==========================================================================
 echo "############ score  $(date)"
 
@@ -128,7 +128,8 @@ python -m tools.score \
   score.model=mdlm-0p5b \
   score.batch_size=8 \
   score.max_new_tokens=32 \
-  score.compute_perplexity=false \
+  score.compute_perplexity=true \
+  score.perplexity_model="$GPT2" \
   score.compute_bertscore=false \
   score.compute_mauve=false
 
