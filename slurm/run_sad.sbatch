@@ -10,7 +10,7 @@
 #
 # NOTE: #SBATCH lines are read before the shell starts, so no $VAR expansion here.
 #SBATCH --job-name=sad
-#SBATCH --account=rg-mijungp
+#SBATCH --account=rrg-mijungp
 #SBATCH --time=1:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
