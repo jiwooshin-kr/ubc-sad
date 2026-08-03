@@ -18,7 +18,7 @@
 #SBATCH --gpus-per-node=a100:1
 #SBATCH --mem=48G
 #SBATCH --mail-user=natu33@kaist.ac.kr
-#SBATCH --mail-type=FAIL,TIME_LIMIT
+#SBATCH --mail-type=END,FAIL,TIME_LIMIT
 #SBATCH --output=/scratch/%u/logs/sad_runs/%x_%j.out
 #SBATCH --error=/scratch/%u/logs/sad_runs/%x_%j.err
 
@@ -27,20 +27,20 @@ set -euo pipefail
 # ==========================================================================
 # KNOBS -- edit these
 # ==========================================================================
-SLUG=mdlm_base_rtp_unsafe    # output folder name; change per experiment
+# SLUG=mdlm_base_rtp_unsafe    # output folder name; change per experiment
 
-# Base row -> leave SAFETY as-is.
-SAFETY=(safety.enabled=false)
+# # Base row -> leave SAFETY as-is.
+# SAFETY=(safety.enabled=false)
 
 # +SAD rows -> comment out the line above and uncomment ONE block below.
 # Table 1 (MDLM): N = 1000, eta = 1.0, C in [1000, 750]
 #
-# SLUG=mdlm_sad_rtp
-# SAFETY=(safety.enabled=true safety.eta=1.0
-#         safety.t_start=750 safety.t_end=1000
-#         safety.unsafe_artifact_root="$SCRATCH/sad/artifacts/unsafe"
-#         safety.unsafe_artifact_name=real-toxicity-prompts-1500
-#         safety.auto_build_unsafe_artifacts=false)
+SLUG=mdlm_sad_rtp
+SAFETY=(safety.enabled=true safety.eta=1.0
+        safety.t_start=750 safety.t_end=1000
+        safety.unsafe_artifact_root="$SCRATCH/sad/artifacts/unsafe"
+        safety.unsafe_artifact_name=real-toxicity-prompts-1500
+        safety.auto_build_unsafe_artifacts=false)
 #
 # SLUG=mdlm_sad_beavertails
 # SAFETY=(safety.enabled=true safety.eta=1.0
