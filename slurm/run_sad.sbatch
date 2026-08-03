@@ -35,19 +35,19 @@ set -euo pipefail
 # +SAD rows -> comment out the line above and uncomment ONE block below.
 # Table 1 (MDLM): N = 1000, eta = 1.0, C in [1000, 750]
 #
-SLUG=mdlm_sad_rtp
-SAFETY=(safety.enabled=true safety.eta=1.0
-        safety.t_start=750 safety.t_end=1000
-        safety.unsafe_artifact_root="$SCRATCH/sad/artifacts/unsafe"
-        safety.unsafe_artifact_name=real-toxicity-prompts-1500
-        safety.auto_build_unsafe_artifacts=false)
-#
-# SLUG=mdlm_sad_beavertails
+# SLUG=mdlm_sad_rtp
 # SAFETY=(safety.enabled=true safety.eta=1.0
 #         safety.t_start=750 safety.t_end=1000
 #         safety.unsafe_artifact_root="$SCRATCH/sad/artifacts/unsafe"
-#         safety.unsafe_artifact_name=beavertails-1500
+#         safety.unsafe_artifact_name=real-toxicity-prompts-1500
 #         safety.auto_build_unsafe_artifacts=false)
+#
+SLUG=mdlm_sad_beavertails
+SAFETY=(safety.enabled=true safety.eta=1.0
+        safety.t_start=750 safety.t_end=1000
+        safety.unsafe_artifact_root="$SCRATCH/sad/artifacts/unsafe"
+        safety.unsafe_artifact_name=beavertails-1500
+        safety.auto_build_unsafe_artifacts=false)
 
 # ==========================================================================
 # 1. environment
