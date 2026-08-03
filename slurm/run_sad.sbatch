@@ -35,19 +35,19 @@ set -euo pipefail
 # +SAD rows -> comment out the line above and uncomment ONE block below.
 # Table 1 (MDLM): N = 1000, eta = 1.0, C in [1000, 750]
 #
-# SLUG=mdlm_sad_rtp
-# SAFETY=(safety.enabled=true safety.eta=1.0
-#         safety.t_start=750 safety.t_end=1000
-#         safety.unsafe_artifact_root="$SCRATCH/sad/artifacts/unsafe"
-#         safety.unsafe_artifact_name=real-toxicity-prompts-1500
-#         safety.auto_build_unsafe_artifacts=false)
-#
-SLUG=mdlm_sad_beavertails
+SLUG=mdlm_sad_rtp_strict
 SAFETY=(safety.enabled=true safety.eta=1.0
         safety.t_start=750 safety.t_end=1000
         safety.unsafe_artifact_root="$SCRATCH/sad/artifacts/unsafe"
-        safety.unsafe_artifact_name=beavertails-1500
+        safety.unsafe_artifact_name=real-toxicity-prompts-1500
         safety.auto_build_unsafe_artifacts=false)
+#
+# SLUG=mdlm_sad_beavertails_strict
+# SAFETY=(safety.enabled=true safety.eta=1.0
+#         safety.t_start=750 safety.t_end=1000
+#         safety.unsafe_artifact_root="$SCRATCH/sad/artifacts/unsafe"
+#         safety.unsafe_artifact_name=beavertails-1500
+#         safety.auto_build_unsafe_artifacts=false)
 
 # ==========================================================================
 # 1. environment
@@ -73,6 +73,8 @@ export REALTOXICITY_DATA_DIR="$SCRATCH/hf_datasets/RealToxicityPrompts"
 export BEAVERTAILS_DATA_DIR="$SCRATCH/hf_datasets/BeaverTails"
 export TOXIGEN_DATA_DIR="$SCRATCH/hf_datasets/ToxiGen"
 export UNSAFE_ARTIFACT_ROOT="$SCRATCH/sad/artifacts/unsafe"
+
+export SAFE_KERNEL_MODE=strict        #  Paper-consistent beta_hat values come from the strict kernel; guidance is using relaxed kernel.
 
 MDLM="$SCRATCH/hf_models/mdlm-owt"
 GPT2="$SCRATCH/hf_models/gpt2-large"
@@ -125,7 +127,7 @@ python -m tools.score \
   score.classifier_model="$GUARD" \
   score.model=mdlm-0p5b \
   score.batch_size=8 \
-  score.max_new_tokens=8 \
+  score.max_new_tokens=32 \
   score.compute_perplexity=false \
   score.compute_bertscore=false \
   score.compute_mauve=false
