@@ -1,0 +1,55 @@
+# 1. venv setting
+module purge
+module load StdEnv/2023 python/3.12 arrow/21.0.0 gcc/12.3 cuda/12.2 faiss
+# virtualenv --no-download ~/venvs/sad_env
+source ~/venvs/sad_env/bin/activate
+# pip install --no-index --upgrade pip
+# pip install --no-deps bert-score
+# pip install --no-index -r ~/uniform/sad/src/requirements.txt
+
+export REPO_ROOT=$(pwd)
+export PYTHONPATH=$REPO_ROOT:$REPO_ROOT/src:$REPO_ROOT/src/mdlm:$REPO_ROOT/src/third_party/mdlm:$PYTHONPATH
+
+
+# 2. Dataset download
+export HF_HOME=$SCRATCH/huggingface      # 이미 설정돼 있음
+cd ~/uniform/sad
+
+python scripts/setup_assets.py \
+    --data-dir   $SCRATCH/hf_datasets \
+    --models-dir $SCRATCH/hf_models \
+    --models gpt2-large
+
+# 3. export in .bashrc
+# export REALTOXICITY_DATA_DIR=$SCRATCH/hf_datasets/RealToxicityPrompts
+# export BEAVERTAILS_DATA_DIR=$SCRATCH/hf_datasets/BeaverTails
+# export TOXIGEN_DATA_DIR=$SCRATCH/hf_datasets/ToxiGen
+
+
+# 4. Build unsafe prep artifacts
+export UNSAFE_ARTIFACT_ROOT=$SCRATCH/sad/artifacts/unsafe
+
+# python -m unsafe_prep.build_unsafe_artifacts \
+#     --config configs/unsafe_prep/unsafe_prep.yaml \
+#     --out $UNSAFE_ARTIFACT_ROOT \
+#     --force \
+#     --set tokenizer_name_or_path=$SCRATCH/hf_models/gpt2-large \
+#     --set "datasets[0].data_dir=$BEAVERTAILS_DATA_DIR" \
+#     --set "datasets[1].data_dir=$REALTOXICITY_DATA_DIR" \
+#     --set "datasets[2].data_dir=$TOXIGEN_DATA_DIR"
+
+# [Error found in ToxiGen Dataset]
+python -m unsafe_prep.build_unsafe_artifacts \
+    --config configs/unsafe_prep/unsafe_prep.yaml \
+    --out $UNSAFE_ARTIFACT_ROOT \
+    --include beavertails real-toxicity-prompts \
+    --set tokenizer_name_or_path=$SCRATCH/hf_models/gpt2-large \
+    --set "datasets[0].split=train" \
+    --set "datasets[0].data_dir=$BEAVERTAILS_DATA_DIR" \
+    --set "datasets[1].data_dir=$REALTOXICITY_DATA_DIR"
+
+
+# 5. Download MDLM checkpoints
+hf download kuleshov-group/mdlm-owt --local-dir $SCRATCH/hf_models/mdlm-owt
+
+# 6. Generate with SAD
