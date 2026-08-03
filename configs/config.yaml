@@ -94,7 +94,7 @@ sharding:
   num_shards: 1
 
 io:
-  base_dir: results
+  base_dir: $SCRATCH/sad_runs
   experiment_slug: base_experiment
   run_id: ${oc.env:SLURM_JOB_ID,local}
   output_dir: ${io.base_dir}/${io.experiment_slug}/${io.run_id}
