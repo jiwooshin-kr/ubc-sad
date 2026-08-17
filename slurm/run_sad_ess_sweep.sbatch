@@ -25,7 +25,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gpus-per-node=a100:1
 #SBATCH --mem=48G
-#SBATCH --mail-user=natu33@kaist.ac.kr
+#SBATCH --mail-user=kaist.jiwooshin@gmail.com
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT
 #SBATCH --output=/scratch/%u/logs/sad_runs/%x_%j.out
 #SBATCH --error=/scratch/%u/logs/sad_runs/%x_%j.err
