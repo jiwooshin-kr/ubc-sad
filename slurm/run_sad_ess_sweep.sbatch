@@ -19,7 +19,9 @@
 #
 #SBATCH --job-name=sad_ess
 #SBATCH --account=rrg-mijungp
-#SBATCH --time=1:30:00
+# 3h covers NPROMPT=250 at batch 8 with guidance on. The earlier 250-prompt run
+# took 27 min at batch 32 with no guidance, so this leaves plenty of headroom.
+#SBATCH --time=3:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
