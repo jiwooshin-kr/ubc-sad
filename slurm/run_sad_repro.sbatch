@@ -125,6 +125,20 @@ export UNSAFE_ARTIFACT_ROOT="$SCRATCH/sad/artifacts/unsafe"
 unset SAFE_KERNEL_MODE SAFE_GUIDANCE_MODE SAFE_BETA_MODE
 unset SAFE_REPELLENCY_DEBUG SAFE_REPELLENCY_VALIDATE
 
+# Ablation hooks. Unset above first, then re-export only what was asked for, so
+# the default stays the paper's regardless of what the submitting shell carries.
+#   KERNEL_MODE=strict|relaxed|both     SAFE_KERNEL_MODE
+#   GUIDANCE_MODE=logit|prob|both       SAFE_GUIDANCE_MODE
+# Both appear in the slug, so ablation runs never collide with the paper run.
+if [ -n "${KERNEL_MODE:-}" ]; then
+  export SAFE_KERNEL_MODE="$KERNEL_MODE"
+  SLUG="${SLUG}_k${KERNEL_MODE}"
+fi
+if [ -n "${GUIDANCE_MODE:-}" ]; then
+  export SAFE_GUIDANCE_MODE="$GUIDANCE_MODE"
+  SLUG="${SLUG}_g${GUIDANCE_MODE}"
+fi
+
 # DIAG=1 turns instrumentation on: ess_probe.csv plus the "Repellency debug
 # (prob vs logit)" line, which measures the two update modes against each other
 # without needing a second run. It does NOT change the result -- p_safe is still
@@ -150,7 +164,7 @@ echo "############ slug=$SLUG job=$SLURM_JOB_ID"
 echo "############ variant=$VARIANT artifact=$ARTIFACT eta=$ETA"
 echo "############ window=[$T_START,$T_END] steps=$STEPS nprompt=$NPROMPT"
 echo "############ prompt score: min=$SCORE_MIN max=$SCORE_MAX (B.8: >=0.8 / <=0.2)"
-echo "############ kernel/guidance: code defaults (relaxed / logit)  diag=${DIAG:-0}"
+echo "############ kernel=${SAFE_KERNEL_MODE:-relaxed(default)} guidance=${SAFE_GUIDANCE_MODE:-logit(default)}  diag=${DIAG:-0}"
 echo "############ prompts: ${PROMPT_SEL[*]}"
 echo "############ safety: ${SAFETY[*]}"
 echo "############ generate  $(date)"
