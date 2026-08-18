@@ -124,10 +124,21 @@ export UNSAFE_ARTIFACT_ROOT="$SCRATCH/sad/artifacts/unsafe"
 # ==========================================================================
 unset SAFE_KERNEL_MODE SAFE_GUIDANCE_MODE SAFE_BETA_MODE
 unset SAFE_REPELLENCY_DEBUG SAFE_REPELLENCY_VALIDATE
-# Diagnostics are off on purpose: SAFE_REPELLENCY_DEBUG makes the denoiser
-# compute BOTH kernels and BOTH guidance modes every step for logging. That is
-# pure overhead here and, more importantly, this run's job is to reproduce a
-# number -- not to instrument. Turn it on for the diagnostic sweeps instead.
+
+# DIAG=1 turns instrumentation on: ess_probe.csv plus the "Repellency debug
+# (prob vs logit)" line, which measures the two update modes against each other
+# without needing a second run. It does NOT change the result -- p_safe is still
+# p_safe_logit, the extra kernels/modes are computed for logging only, and none
+# of it draws randomness. The cost is speed: compute_both makes every step
+# evaluate both kernels and both guidance modes.
+#
+# Off by default so the reproduction run stays a clean measurement of one
+# number. Turn it on for the window sweep, where relaxed-kernel ESS is the
+# point -- it has never been measured (every ESS figure so far is strict).
+if [ "${DIAG:-0}" = 1 ]; then
+  export SAFE_REPELLENCY_DEBUG=1
+  export SAFE_REPELLENCY_CSV_LOG=ess_probe.csv
+fi
 
 MDLM="$SCRATCH/hf_models/mdlm-owt"
 GPT2="$SCRATCH/hf_models/gpt2-large"
@@ -139,7 +150,7 @@ echo "############ slug=$SLUG job=$SLURM_JOB_ID"
 echo "############ variant=$VARIANT artifact=$ARTIFACT eta=$ETA"
 echo "############ window=[$T_START,$T_END] steps=$STEPS nprompt=$NPROMPT"
 echo "############ prompt score: min=$SCORE_MIN max=$SCORE_MAX (B.8: >=0.8 / <=0.2)"
-echo "############ kernel/guidance: code defaults (relaxed / logit)"
+echo "############ kernel/guidance: code defaults (relaxed / logit)  diag=${DIAG:-0}"
 echo "############ prompts: ${PROMPT_SEL[*]}"
 echo "############ safety: ${SAFETY[*]}"
 echo "############ generate  $(date)"
@@ -193,3 +204,31 @@ echo "ASR_ROW slug=$SLUG variant=$VARIANT artifact=$ARTIFACT eta=$ETA window=t${
 grep -m1 "^toxicity," "$RUN_DIR/scores_summary.csv" 2>/dev/null \
   || cat "$RUN_DIR/scores_summary.csv" 2>/dev/null \
   || echo "(no scores_summary.csv)"
+
+# DIAG=1 also wrote an ESS probe; report it so the .out is self-contained.
+if [ "${DIAG:-0}" = 1 ]; then
+  echo
+  python - "$RUN_DIR" "$T_START" "$T_END" "$ARTIFACT" <<'ESSPY'
+import csv, statistics, sys
+from pathlib import Path
+
+run_dir, t_start, t_end, artifact = sys.argv[1:5]
+hits = sorted(Path(run_dir).rglob("ess_probe.csv"))
+if not hits:
+    print("NO ess_probe.csv -- DIAG=1 was set but nothing was written")
+    raise SystemExit(0)
+for probe in hits:
+    rows = list(csv.DictReader(open(probe)))
+    ess = [float(r["ess_weights"]) for r in rows
+           if r.get("ess_weights") not in (None, "")]
+    if not ess:
+        continue
+    # Running relaxed leaves the beta_hat_paper warning path on, which adds this
+    # column; strict does not. Cheapest confirmation of which kernel guided.
+    kernel = "relaxed" if "beta_kernel_mode_paper" in rows[0] else "strict"
+    print(f"ESS_RESULT artifact={artifact} window=t{t_start}-{t_end} "
+          f"rows={len(ess)} ESS={statistics.mean(ess):.2f} "
+          f"min={min(ess):.2f} max={max(ess):.2f} kernel={kernel}")
+    print(f"  path: {probe}")
+ESSPY
+fi
