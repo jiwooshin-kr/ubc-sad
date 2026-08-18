@@ -42,26 +42,11 @@ safety:
   enabled: false
   unsafe_path: /home/ammany/scratch/data/text-diffusion/unsafe_toxigen_annotated_train.pt
   unsafe_prototypes_path: null
-  # MUST stay 0. RepellencyMethod.conditioning() dispatches on this
-  # (repellency_methods_fast.py:160): any value > 0 routes to the BASE class's
-  # conditioning_2 instead of MaskKernelRepellency.conditioning_1, which is where
-  # the entire SAD implementation lives -- kernel, weights, beta_hat, logit-space
-  # update. And conditioning_2 is not a variant of the method, it is destructive:
-  #
-  #     negative_x_0_hat, item = self.empirical_denoiser(...)
-  #     x_0_hat -= negative_x_0_hat                  # computed, then discarded
-  #     return {"x_0_hat": negative_x_0_hat, ...}    # returns p_unsafe itself
-  #
-  # so the model's denoiser output is REPLACED by the unsafe reference mixture.
-  # Generation is steered toward the negation set, not away from it.
-  #
-  # At the shipped 0.1 this silently broke every +SAD run: six conditions
-  # (relaxed/strict x rtp/bt x four windows) all came out with ASR >= Base and
-  # never once below it, every completion differed from Base, and bt was worse
-  # than rtp because its longer references cover more of the canvas. beta_hat and
-  # ESS still logged normally -- they are computed inside empirical_denoiser --
-  # which is what made this hard to see.
-  guidance_scale: 0.0
+  # Inert on the MDLM path: diffusion.py:733 calls repellency.conditioning()
+  # without guidance_scale, so the dispatch in repellency_methods_fast.py:160
+  # always falls through to conditioning_1 (the SAD implementation). Only the
+  # llada_engine / safe_hooks callers pass it. Left at the upstream value.
+  guidance_scale: 0.1
   weight_mode: eta_beta_hat
   eta: null
   scale: null           # deprecated; fallback for legacy configs
