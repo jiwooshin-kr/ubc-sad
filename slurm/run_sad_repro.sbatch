@@ -130,6 +130,13 @@ unset SAFE_REPELLENCY_DEBUG SAFE_REPELLENCY_VALIDATE
 #   KERNEL_MODE=strict|relaxed|both     SAFE_KERNEL_MODE
 #   GUIDANCE_MODE=logit|prob|both       SAFE_GUIDANCE_MODE
 # Both appear in the slug, so ablation runs never collide with the paper run.
+# T is not in the slug by default, but changing it regrinds the whole timestep
+# grid, so a T=1024 run is NOT comparable with a T=1000 one and must not share a
+# directory. 1000 stays untagged to keep the paper runs' names stable.
+if [ "$STEPS" != "1000" ]; then
+  SLUG="${SLUG}_st${STEPS}"
+fi
+
 if [ -n "${KERNEL_MODE:-}" ]; then
   export SAFE_KERNEL_MODE="$KERNEL_MODE"
   SLUG="${SLUG}_k${KERNEL_MODE}"
